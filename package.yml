@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Universal Sales Worksheet PDF
+Parameters:
+  IAMUsername:
+    Description: Username of the IAM user for this service
+    Type: String
+    Default: sysadmin
+  BucketName:
+    Description: Bucket that stores pdfs
+    Type: String
+  ThundraKey:
+    Description: thundra.io API key
+    Type: String
+  KMSKeyID:
+    Description: KMS key id
+    Type: String
+Resources:
+  Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: go1.x
+      CodeUri: s3://ca-universalwindows/wrksht-pdf-lambda/a623c2f396ef1210a182b3fdf1733cdc
+      Handler: /pdf
+      Role:
+        Fn::GetAtt:
+        - LambdaRole
+        - Arn
+      Environment:
+        Variables:
+          Stage: prod
+          thundra_apiKey:
+            Ref: ThundraKey
+          thundra_agent_lambda_report_cloudwatch_enable: true
+      Timeout: 20
+      VpcConfig:
+        SecurityGroupIds:
+        - sg-5afb2932
+        - sg-8f6baee7
+        SubnetIds:
+        - subnet-0da8d176
+        - subnet-7f092816
+      Events:
+        Create:
+          Type: Api
+          Properties:
+            Path: /
+            Method: post
+        Ping:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+      Tags:
+        BillTo: Universal
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    DeletionPolicy: Retain
+    Properties:
+      StageName: Prod
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: FunctionSSMAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:GetParametersByPath
+            Resource:
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-wrksht-pdf*
+      - PolicyName: FunctionLogAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: '*'
+      - PolicyName: FunctionXRayAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            Resource: '*'
+      - PolicyName: FunctionVPCAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DeleteNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            Resource: '*'
+      - PolicyName: FunctionKMSAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - kms:Decrypt
+            - kms:DescribeKey
+            Resource:
+              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${KMSKeyID}
+      - PolicyName: FunctionS3Access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource:
+              Fn::Sub: arn:aws:s3:::${BucketName}/*
+Outputs:
+  ProdDataEndpoint:
+    Description: API Prod stage endpoint
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
