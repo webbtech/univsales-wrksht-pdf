@@ -17,3 +17,5 @@
 # misc
 scratch
 .env
+tmp/
+package.yml
