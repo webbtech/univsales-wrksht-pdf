@@ -19,3 +19,4 @@ scratch
 .env
 tmp/
 package.yml
+dist/
