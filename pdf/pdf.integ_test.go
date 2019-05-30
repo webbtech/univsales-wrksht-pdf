@@ -22,9 +22,7 @@ type IntegSuite struct {
 
 const (
 	defaultsFP = "../config/defaults.yml"
-	quoteID    = "5cd16f18699e0300c7b10d30"
-	// quoteID = "5c9d21f0f1c8a86cac0adcbc"
-	// quoteID = "5c880187b5342edbda202712"
+	quoteID    = "5ccc90913c4a256251cf326b"
 )
 
 // SetupTest method

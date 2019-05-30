@@ -41,6 +41,7 @@ type Customer struct {
 		Last   string `bson:"last" json:"last"`
 		Spouse string `bson:"spouse" json:"spouse,omitempty"`
 	}
+	Notes    string `bson:"notes" json:"notes"`
 	Phones   []*Phone
 	Address  *Address
 	PhoneMap map[string]string

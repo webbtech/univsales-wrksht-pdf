@@ -54,6 +54,7 @@ func (p *PDF) quoteTitle() {
 
 	pdf := p.pdf
 	q := p.q
+	fmt.Printf("q %+v\n", q.Customer)
 
 	var (
 		rsp     *http.Response
@@ -108,7 +109,14 @@ func (p *PDF) quoteTitle() {
 	pdf.SetFont("Arial", "U", 10)
 	pdf.CellFormat(0, 5, coDomain, "", 2, "", false, 0, fmt.Sprintf("https://%s", coDomain))
 
-	pdf.MoveTo(10, 60)
+	pdf.MoveTo(10, 50)
+	pdf.SetFont("Arial", "", 9)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.CellFormat(10, 5, "Notes:", "", 0, "", false, 0, "")
+	pdf.SetFont("Arial", "I", 9)
+	pdf.CellFormat(0, 5, q.Customer.Notes, "", 2, "", false, 0, "")
+
+	pdf.Ln(4)
 }
 
 func (p *PDF) groupList() {
@@ -220,7 +228,6 @@ func (p *PDF) windowList() {
 		if g.Specs["trim"] != nil {
 			trim = setNewLines(g.Specs["trim"])
 		}
-		// fmt.Printf("g.Specs %+v\n", g.Specs["trim"])
 
 		pdf.SetFont("Arial", "B", pfSize)
 		pdf.CellFormat(0, 6, fmt.Sprintf("%d%s", ctr, ")"), "", 1, "", false, 0, "")
@@ -280,7 +287,6 @@ func (p *PDF) otherList() {
 
 	ctr := 1
 	for _, g := range q.Items.Other {
-		fmt.Printf("g %+v\n", g)
 		pdf.SetFont("Arial", "B", pfSize)
 		pdf.CellFormat(0, 6, fmt.Sprintf("%d%s", ctr, ")"), "", 1, "", false, 0, "")
 
