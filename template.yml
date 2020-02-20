@@ -4,21 +4,25 @@ Transform: AWS::Serverless-2016-10-31
 Description: Universal Sales Worksheet PDF
 
 Parameters:
-  IAMUsername:
-    Description: Username of the IAM user for this service
-    Type: String
-    Default: sysadmin
-  BucketName:
+  ParamBucketName:
     Description: Bucket that stores pdfs
     Type: String
-  ThundraKey:
+  ParamThundraKey:
     Description: thundra.io API key
     Type: String
-  KMSKeyID:
+  ParamKMSKeyID:
     Description: KMS key id
     Type: String
 
 Resources:
+  RestApi:
+    Type: AWS::Serverless::Api
+    DeletionPolicy: Delete
+    DependsOn: Lambda
+    Properties:
+      StageName: Prod
+      EndpointConfiguration: REGIONAL
+
   Lambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -29,9 +33,9 @@ Resources:
       Environment:
         Variables:
           Stage: prod
-          thundra_apiKey: !Ref ThundraKey
-          thundra_agent_lambda_report_cloudwatch_enable: true
-          thundra_lambda_warmup_warmupAware: true
+          thundra_apiKey: !Ref ParamThundraKey
+          # thundra_agent_lambda_report_cloudwatch_enable: true
+          # thundra_lambda_warmup_warmupAware: true
       Timeout: 20
       VpcConfig:
         SecurityGroupIds:
@@ -46,19 +50,15 @@ Resources:
           Properties:
             Path: /
             Method: post
+            RestApiId: !Ref RestApi
         Ping:
           Type: Api
           Properties:
             Path: /
             Method: get
+            RestApiId: !Ref RestApi
       Tags:
         BillTo: 'Universal'
-
-  ServerlessRestApi:
-    Type: AWS::Serverless::Api
-    DeletionPolicy: "Retain"
-    Properties:
-      StageName: Prod
 
   LambdaRole:
     Type: AWS::IAM::Role
@@ -129,7 +129,7 @@ Resources:
             - kms:Decrypt
             - kms:DescribeKey
             Resource:
-              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${KMSKeyID}
+              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${ParamKMSKeyID}
       - PolicyName: FunctionS3Access
         PolicyDocument:
           Version: '2012-10-17'
@@ -138,9 +138,22 @@ Resources:
             Action:
             - s3:*
             Resource: 
-              Fn::Sub: arn:aws:s3:::${BucketName}/*
+              Fn::Sub: arn:aws:s3:::${ParamBucketName}/*
 
 Outputs:
-  ProdDataEndpoint:
+  ApiId:
+    Description: API ID
+    Value:
+      Ref: RestApi
+  ApiEndpoint:
     Description: "API Prod stage endpoint"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  ApiArn:
+    Description: "API ARN"
+    Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/"
+  LambdaArn:
+    Description: "Lambda ARN"
+    Value: !GetAtt Lambda.Arn
+  LambdaRoleArn:
+    Description: "Lambda Role ARN"
+    Value: !GetAtt LambdaRole.Arn
