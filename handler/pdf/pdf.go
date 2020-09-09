@@ -21,9 +21,7 @@ const (
 	epsagonToken   = "73993039-d583-43ad-84eb-1a443e257274"
 )
 
-var (
-	cfg *config.Config
-)
+var cfg *config.Config
 
 func init() {
 	cfg = &config.Config{}
