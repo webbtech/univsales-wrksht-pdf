@@ -23,7 +23,7 @@ type IntegSuite struct {
 
 const (
 	defaultsFP = "../../config/defaults.yml"
-	quoteID    = "5cb7a1b5b413522c173b3cde"
+	quoteID    = "5ccc90913c4a256251cf326b"
 )
 
 // SetupTest method
@@ -104,8 +104,8 @@ func (suite *IntegSuite) TestGetJobsheetFeatures() {
 }
 
 func (suite *IntegSuite) TestFetchQuote() {
-	q, err := suite.db.FetchQuote(quoteID)
-	fmt.Printf("q %+v\n", q.ID)
+	_, err := suite.db.FetchQuote(quoteID)
+	// fmt.Printf("q %+v\n", q)
 	suite.NoError(err)
 }
 

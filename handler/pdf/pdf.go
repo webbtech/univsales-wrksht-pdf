@@ -2,29 +2,28 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
+
+	pres "github.com/pulpfree/lambda-go-proxy-response"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/epsagon/epsagon-go/epsagon"
 	"github.com/pulpfree/univsales-wrksht-pdf/config"
 	"github.com/pulpfree/univsales-wrksht-pdf/model"
 	"github.com/pulpfree/univsales-wrksht-pdf/model/mongo"
 	"github.com/pulpfree/univsales-wrksht-pdf/pdf"
-	log "github.com/sirupsen/logrus"
-	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
 )
 
-// Response data format
-type Response struct {
-	Code      int         `json:"code"`      // HTTP status code
-	Data      interface{} `json:"data"`      // Data payload
-	Message   string      `json:"message"`   // Error or status message
-	Status    string      `json:"status"`    // Status code (error|fail|success)
-	Timestamp int64       `json:"timestamp"` // Machine-readable UTC timestamp in nanoseconds since EPOCH
-}
+const (
+	epsagonAppName = "univsales"
+	epsagonToken   = "73993039-d583-43ad-84eb-1a443e257274"
+)
 
-var cfg *config.Config
+var (
+	cfg *config.Config
+)
 
 func init() {
 	cfg = &config.Config{}
@@ -39,17 +38,25 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 
 	hdrs := make(map[string]string)
 	hdrs["Content-Type"] = "application/json"
+	hdrs["Access-Control-Allow-Origin"] = "*"
+	hdrs["Access-Control-Allow-Methods"] = "GET,OPTIONS,POST,PUT"
+	hdrs["Access-Control-Allow-Headers"] = "Authorization,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
+
+	if req.HTTPMethod == "OPTIONS" {
+		return events.APIGatewayProxyResponse{Body: string("null"), Headers: hdrs, StatusCode: 200}, nil
+	}
+
 	t := time.Now()
 
 	// If this is a ping test, intercept and return
 	if req.HTTPMethod == "GET" {
 		log.Info("Ping test in handleRequest")
-		return gatewayResponse(Response{
+		return pres.ProxyRes(pres.Response{
 			Code:      200,
 			Data:      "pong",
 			Status:    "success",
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, nil), nil
 	}
 
 	var r *pdf.Request
@@ -57,65 +64,47 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 
 	db, err := mongo.NewDB(cfg.GetMongoConnectURL(), cfg.DBName)
 	if err != nil {
-		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("error: %s", err.Error()),
-			Status:    "error",
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
 
 	var q *model.Quote
 	q, err = db.FetchQuote(r.QuoteID)
 	if err != nil {
-		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("error: %s", err.Error()),
-			Status:    "error",
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
 
 	var p *pdf.PDF
 	p = pdf.New(r, q, cfg)
 	err = p.WorkSheet()
-
 	if err != nil {
-		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("error: %s", err.Error()),
-			Status:    "error",
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
 
 	location, err := p.SaveToS3()
 	if err != nil {
-		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("error: %s", err.Error()),
-			Status:    "error",
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
 	log.Infof("Successfully created PDF with location: %s", location)
 
-	return gatewayResponse(Response{
+	return pres.ProxyRes(pres.Response{
 		Code:      201,
 		Data:      location,
 		Status:    "success",
 		Timestamp: t.Unix(),
-	}, hdrs), nil
+	}, hdrs, nil), nil
 }
 
 func main() {
-	lambda.Start(thundra.Wrap(HandleRequest))
-}
-
-func gatewayResponse(resp Response, hdrs map[string]string) events.APIGatewayProxyResponse {
-	body, _ := json.Marshal(&resp)
-	if resp.Status == "error" {
-		log.Errorf("Error: status: %s, code: %d, message: %s", resp.Status, resp.Code, resp.Message)
-	}
-	return events.APIGatewayProxyResponse{Body: string(body), Headers: hdrs, StatusCode: resp.Code}
+	log.Println("enter main")
+	lambda.Start(epsagon.WrapLambdaHandler(
+		epsagon.NewTracerConfig(epsagonAppName, epsagonToken),
+		HandleRequest))
 }

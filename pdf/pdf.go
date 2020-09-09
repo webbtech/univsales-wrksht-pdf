@@ -36,7 +36,6 @@ type Request struct {
 
 // New function
 func New(r *Request, q *model.Quote, cfg *config.Config) *PDF {
-
 	return &PDF{
 		Request: r,
 		cfg:     cfg,

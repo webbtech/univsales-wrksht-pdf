@@ -3,6 +3,7 @@ package config
 // defaults struct
 type defaults struct {
 	AWSRegion  string `yaml:"AWSRegion"`
+	CognitoClientID string `yaml:"CognitoClientID"`
 	DBHost     string `yaml:"DBHost"`
 	DBName     string `yaml:"DBName"`
 	DBPassword string `yaml:"DBPassword"`
@@ -16,6 +17,7 @@ type defaults struct {
 
 type config struct {
 	AWSRegion    string
+	CognitoClientID string
 	DBConnectURL string
 	DBName       string
 	DocAuthor    string

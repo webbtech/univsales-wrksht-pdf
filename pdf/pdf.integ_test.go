@@ -66,7 +66,6 @@ func (suite *IntegSuite) TestSetFileNameOutput() {
 }
 
 func (suite *IntegSuite) TestOutputToDisk() {
-
 	req := &Request{
 		QuoteID: quoteID,
 	}

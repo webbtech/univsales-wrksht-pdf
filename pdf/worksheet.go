@@ -54,7 +54,8 @@ func (p *PDF) quoteTitle() {
 
 	pdf := p.pdf
 	q := p.q
-	fmt.Printf("q %+v\n", q.Customer)
+
+	fmt.Printf("q.Fees %+v\n", q.Fees)
 
 	var (
 		rsp     *http.Response
@@ -93,21 +94,30 @@ func (p *PDF) quoteTitle() {
 	if q.Customer.Email != "" {
 		pdf.CellFormat(0, 5.5, q.Customer.Email, "", 2, "", false, 0, fmt.Sprintf("mailto:%s", q.Customer.Email))
 	}
-	pdf.MoveTo(90, 10)
+
+	pdf.ImageOptions(p.cfg.LogoURI, 80, 10, 45, 0, false, imgInfo, 0, fmt.Sprintf("https://%s", coDomain))
+
+	pdf.MoveTo(150, 10)
 	pdf.SetTextColor(0, 0, 0)
 	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(0, 6, "Invoice No", "", 2, "", false, 0, "")
+	pdf.CellFormat(25, 6, "Invoice No", "", 0, "", false, 0, "")
 	pdf.SetFont("Arial", "", 12)
-	pdf.CellFormat(0, 7, quoteNo, "", 2, "", false, 0, "")
-	pdf.ImageOptions(p.cfg.LogoURI, 160, 10, 45, 0, false, imgInfo, 0, fmt.Sprintf("https://%s", coDomain))
-
-	pdf.MoveTo(160, 30)
+	pdf.CellFormat(0, 6, quoteNo, "", 1, "", false, 0, "")
+	pdf.MoveTo(150, 16)
 	pdf.SetFont("Arial", "", 10)
-	pdf.CellFormat(0, 5, coAddressStreet, "", 2, "", false, 0, "")
-	pdf.CellFormat(0, 5, fmt.Sprintf("%s, %s %s", coAddressCity, coAddressProvince, coAddressPostal), "", 2, "", false, 0, "")
-	pdf.SetTextColor(0, 0, 200)
-	pdf.SetFont("Arial", "U", 10)
-	pdf.CellFormat(0, 5, coDomain, "", 2, "", false, 0, fmt.Sprintf("https://%s", coDomain))
+	pdf.CellFormat(32, 5, "Total Cost", "", 0, "", false, 0, "")
+	pdf.CellFormat(10, 5, formatMoney(q.Fees.TotalCost, "$"), "", 2, "", false, 0, "")
+	pdf.MoveTo(150, 22)
+	pdf.CellFormat(32, 5, "Total Outstanding", "", 0, "", false, 0, "")
+	pdf.CellFormat(10, 5, formatMoney(q.Fees.Outstanding, "$"), "", 2, "", false, 0, "")
+
+	// pdf.MoveTo(160, 30)
+	// pdf.SetFont("Arial", "", 10)
+	// pdf.CellFormat(0, 5, coAddressStreet, "", 2, "", false, 0, "")
+	// pdf.CellFormat(0, 5, fmt.Sprintf("%s, %s %s", coAddressCity, coAddressProvince, coAddressPostal), "", 2, "", false, 0, "")
+	// pdf.SetTextColor(0, 0, 200)
+	// pdf.SetFont("Arial", "U", 10)
+	// pdf.CellFormat(0, 5, coDomain, "", 2, "", false, 0, fmt.Sprintf("https://%s", coDomain))
 
 	pdf.MoveTo(10, 50)
 	pdf.SetFont("Arial", "", 9)

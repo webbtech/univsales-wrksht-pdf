@@ -20,3 +20,5 @@ scratch
 tmp/
 package.yml
 dist/
+docs/*
+*.bak

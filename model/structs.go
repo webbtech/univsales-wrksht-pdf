@@ -18,8 +18,12 @@ type Quote struct {
 	Items      *Items             `bson:"is"`
 	JobsheetID primitive.ObjectID `bson:"jobsheetID" json:"jobsheetID"`
 	Number     int                `bson:"number" json:"number"`
-	Revision   int                `bson:"version" bson:"version"`
-	UpdatedAt  time.Time          `bson:"updatedAt" json:"updatedAt"`
+	Fees       struct {
+		TotalCost   float64 `bson:"total"`
+		Outstanding float64 `bson:"outstanding"`
+	} `bson:"quotePrice"`
+	Revision  int       `bson:"version" bson:"version"`
+	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
 }
 
 // Address struct

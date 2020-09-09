@@ -9,6 +9,10 @@
 # Create params
 aws ssm put-parameter --name /test/univsales-wrksht-pdf/DBName \
   --value universal-sales --type String --overwrite
+
+  # Get parameters
+aws ssm get-parameters-by-path --path /test/univsales-wrksht-pdf \
+  --with-decryption
 ```
 
 ## Parameters for production
@@ -18,6 +22,9 @@ aws ssm put-parameter --name /test/univsales-wrksht-pdf/DBName \
 
 ``` bash
 # Create String params
+aws ssm put-parameter --name /prod/univsales-wrksht-pdf/CognitoClientID \
+  --value 2075kbbbb3hadmtaledcncfbk0 --type String --overwrite
+
 aws ssm put-parameter --name /prod/univsales-wrksht-pdf/DBHost \
   --value ca-central-1a.mongo,ca-central-1b.mongo --type String --overwrite
 
@@ -36,4 +43,7 @@ aws ssm put-parameter --name /prod/univsales-wrksht-pdf/DBUser \
 # Get parameters
 aws ssm get-parameters-by-path --path /prod/univsales-wrksht-pdf
 aws ssm get-parameters-by-path --path /prod/univsales-wrksht-pdf --with-decryption
+
+# Delete parameters
+aws ssm delete-parameters --name /prod/uunivsales-wrksht-pdf/CognitoClientID
 ```

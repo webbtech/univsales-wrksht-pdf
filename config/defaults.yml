@@ -1,11 +1,11 @@
 AWSRegion: "ca-central-1"
-DBHost: 192.168.86.24
+DBHost: 192.168.86.137
 DBName: ""
 DBPassword: ""
 DBUser: ""
+DocAuthor: "Universal Windows"
 HSTNumber: ""
 LogoURI: "https://s3.amazonaws.com/ca.universalwindows/pdf/UniversalLogo.jpg"
-DocAuthor: "Universal Windows"
 S3Bucket: "ca-universalwindows"
 SsmPath: "univsales-wrksht-pdf"
 Stage: "prod"
