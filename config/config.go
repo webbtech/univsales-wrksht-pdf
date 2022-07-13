@@ -200,8 +200,15 @@ func (c *Config) setSSMParams() (err error) {
 // Build a url used in mgo.Dial as described in: https://godoc.org/gopkg.in/mgo.v2#Dial
 func (c *Config) setDBConnectURL() *Config {
 
+	// This really feels hacky... but we don't have the time to do it properly right now
+	if c.GetStageEnv() != TestEnv {
+		c.setAWSConnectURL()
+		return c
+	}
+
 	var userPass, authSource string
 
+	// TODO: fix this properly as I don't see the need to use user and pass any longer
 	if defs.DBUser != "" && defs.DBPassword != "" {
 		userPass = defs.DBUser + ":" + defs.DBPassword + "@"
 	}
@@ -213,6 +220,10 @@ func (c *Config) setDBConnectURL() *Config {
 	c.DBConnectURL = "mongodb://" + userPass + defs.DBHost + "/" + authSource
 
 	return c
+}
+
+func (c *Config) setAWSConnectURL() {
+	c.DBConnectURL = fmt.Sprintf("mongodb+srv://%s/%s?authSource=%sexternal&authMechanism=MONGODB-AWS&retryWrites=true&w=majority", defs.DBHost, defs.DBName, "$")
 }
 
 // Copies required fields from the defaults to the Config struct

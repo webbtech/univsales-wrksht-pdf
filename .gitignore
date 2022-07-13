@@ -12,13 +12,14 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
+.vscode/
 vendor/
 
 # misc
 scratch
 .env
 tmp/
-package.yml
+package*.yml
 dist/
 docs/*
 *.bak
