@@ -10,6 +10,9 @@ Parameters:
   ParamCustomDomainName:
     Description: Custom Domain Name
     Type: String
+  ParamENV:
+    Description: Stage environment
+    Type: String
   ParamHostedZoneId:
     Description: Hosted Zone ID
     Type: String
@@ -86,7 +89,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
-          Stage: prod
+          Stage: !Ref ParamENV
       Tags:
         BillTo: 'Universal'
       VpcConfig:
@@ -151,7 +154,7 @@ Resources:
             Action:
             - ssm:GetParametersByPath
             Resource:
-              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-wrksht-pdf*
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParamENV}/univsales-wrksht-pdf*
       - PolicyName: FunctionLogAccess
         PolicyDocument:
           Version: '2012-10-17'
@@ -222,7 +225,7 @@ Resources:
             Action:
             - ssm:GetParametersByPath
             Resource:
-              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-wrksht-pdf*
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParamENV}/univsales-wrksht-pdf*
       - PolicyName: FunctionKMS
         PolicyDocument:
           Version: '2012-10-17'
@@ -249,7 +252,7 @@ Outputs:
     Description: "API ID"
     Value: !Ref RestApi
   ApiEndpoint:
-    Description: "API Prod stage endpoint"
+    Description: "API endpoint"
     Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   ApiArn:
     Description: "API ARN"

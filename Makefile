@@ -1,6 +1,16 @@
+# if the ENV environment variable is not set to either stage or prod, makefile will fail
+# ENV is confirmed below in the check_env directive
+# example:
+# for stage run: ENV=stage make
+# for production run: ENV=prod make
+
+
 include .env
 
-default: build awspackage awsdeploy
+default: check_env build awspackage awsdeploy
+
+check_env:
+	@echo -n "Your environment is $(ENV)? [y/N] " && read ans && [ $${ans:-N} = y ]
 
 clean:
 	@rm -rf dist
@@ -40,6 +50,7 @@ awsdeploy:
 	--parameter-overrides \
 	 	ParamCertificateArn=$(CERTIFICATE_ARN) \
 		ParamCustomDomainName=$(CUSTOM_DOMAIN_NAME) \
+		ParamENV=$(ENV) \
 		ParamHostedZoneId=$(HOSTED_ZONE_ID) \
 	 	ParamKMSKeyID=$(KMS_KEY_ID) \
 		ParamProjectName=$(PROJECT_NAME) \
